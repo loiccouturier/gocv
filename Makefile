@@ -6,36 +6,47 @@
 RPMS=make cmake git gtk2-devel pkg-config libpng-devel libjpeg-devel libtiff-devel tbb tbb-devel libdc1394-devel jasper-libs jasper-devel
 DEBS=unzip build-essential cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev
 
-# Detect Linux distribution
-IS_FEDORA=$(shell which dnf 2>/dev/null)
-IS_DEB_UBUNTU=$(shell which apt-get 2>/dev/null)
-IS_RH_CENTOS=$(shell which yum 2>/dev/null)
+DISTRI=$(shell lsb_release -is)
 
 test:
+	@echo "Test Step"
 	go test .
 
 deps:
-ifneq ($(IS_FEDORA),'')
+	@echo "Deps Step"
+ifeq ($(DISTRI),Fedora)
 	$(MAKE) deps_fedora
 else
-ifneq ($(IS_RH_CENTOS),'')
+ifeq ($(DISTRI),CentOS)
 	$(MAKE) deps_rh_centos
 else
+ifeq ($(DISTRI),RedHatEnterpriseServer)
+	$(MAKE) deps_rh_centos
+else
+ifeq ($(DISTRI),Ubuntu)
 	$(MAKE) deps_debian
+else
+	@echo "Os not found"
+endif
+endif
 endif
 endif
 
 deps_rh_centos:
+	@echo "Deps RedHat/CentOS Step"
 	sudo yum install $(RPMS)
 
 deps_fedora:
+	@echo "Deps Fedora Step"
 	sudo dnf install $(RPMS)
 
 deps_debian:
+	@echo "Deps Debian Step"
 	sudo apt-get update
 	sudo apt-get install $(DEBS)
 
 download:
+	@echo "Download Step"
 	mkdir /tmp/opencv
 	cd /tmp/opencv
 	wget -O opencv.zip https://github.com/opencv/opencv/archive/3.4.1.zip
@@ -44,6 +55,7 @@ download:
 	unzip opencv_contrib.zip
 
 build:
+	@echo "Build Step"
 	cd /tmp/opencv/opencv-3.4.1
 	mkdir build
 	cd build
@@ -53,10 +65,12 @@ build:
 	sudo ldconfig
 
 clean:
+	@echo "Clean Step"
 	cd ~
 	rm -rf /tmp/opencv
 
 astyle:
+	@echo "Astyle Step"
 	astyle --project=.astylerc --recursive *.cpp,*.h
 
 install: download build clean
